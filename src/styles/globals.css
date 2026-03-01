@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/roboto-mono/roboto-mono-400.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/roboto-mono/roboto-mono-500.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/roboto-mono/roboto-mono-700.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --background: #f2f4f7;
+  --foreground: #232d3b;
+  --muted-foreground: #8a92a0;
+  --surface: #eef1f5;
+  --surface-muted: #f3f5f8;
+  --border: rgba(116, 126, 143, 0.18);
+  --border-strong: rgba(116, 126, 143, 0.28);
+  --panel-surface: #f5f7fa;
+  --panel-border: rgba(148, 157, 171, 0.36);
+  --divider: rgba(148, 157, 171, 0.28);
+  --accent: #4d76d9;
+  --accent-strong: #3c61ba;
+  --accent-muted: rgba(77, 118, 217, 0.08);
+  --accent-foreground: #ffffff;
+  --ring: rgba(77, 118, 217, 0.32);
+  --destructive-bg: rgba(194, 82, 69, 0.1);
+  --destructive-border: rgba(194, 82, 69, 0.24);
+  --destructive-foreground: #8f3d33;
+  --info-icon: #9198a4;
+  --info-banner: #e7eefc;
+  --info-banner-accent: #4d76d9;
+  --info-banner-foreground: #3152b6;
+  --font-sans: "Roboto Mono", "SFMono-Regular", "Menlo", "Monaco", "Courier New", monospace;
+  --font-mono: "Roboto Mono", "SFMono-Regular", "Menlo", "Monaco", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  width: 640px;
+  min-width: 640px;
+  min-height: 520px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f4f6f8 0%, #eff2f5 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings:
+    "liga" 0,
+    "calt" 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.popup-canvas {
+  position: relative;
+  isolation: isolate;
+}
+
+.popup-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79, 91, 109, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 91, 109, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.34), transparent 92%);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.panel-enter {
+  animation: panel-rise 220ms ease-out;
+}
+
+.status-flash {
+  animation: status-flash 220ms ease-out;
+}
+
+@keyframes panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes status-flash {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-enter,
+  .status-flash {
+    animation: none;
+  }
+}
