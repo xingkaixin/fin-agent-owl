@@ -1,3 +1,5 @@
+import type { AgentDumpCommandOption } from "@/lib/command/agent-dump";
+
 export type QueryErrorCode =
   | "NO_ACTIVE_TAB"
   | "INVALID_URL"
@@ -22,6 +24,7 @@ export type SessionLookupSuccess = {
   channelId: string;
   sessionId: string;
   command: string;
+  commandOptions: AgentDumpCommandOption[];
   title?: string;
   updatedAt?: string;
 };

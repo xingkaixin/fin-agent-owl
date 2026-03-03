@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildFailure, getActiveTab, isInjectablePage } from "@/lib/chrome/active-tab";
 import { copyToClipboard } from "@/lib/clipboard/copy";
+import type { AgentDumpCommandOption, AgentDumpCommandOptionId } from "@/lib/command/agent-dump";
 import { readSessionIdFromPage } from "@/lib/indexeddb/read-session";
 import { parseChannelIdFromUrl } from "@/lib/parsing/channel-id";
 import type { SessionLookupFailure, SessionLookupResult } from "@/types/session";
@@ -9,6 +10,12 @@ import type { SessionLookupFailure, SessionLookupResult } from "@/types/session"
 type ViewState = { kind: "loading" } | { kind: "ready"; result: SessionLookupResult };
 
 const successCopyLabelDurationMs = 3000;
+
+const fallbackCommandOption: AgentDumpCommandOption = {
+  id: "installed",
+  label: "installed",
+  command: "",
+};
 
 function CopyIcon(): React.JSX.Element {
   return (
@@ -38,11 +45,11 @@ function CheckIcon(): React.JSX.Element {
   );
 }
 
-function TerminalPromptIcon(): React.JSX.Element {
+function TerminalPromptIcon({ className = "" }: { className?: string }): React.JSX.Element {
   return (
     <svg
       aria-hidden="true"
-      className="mt-1 h-[22px] w-[22px] shrink-0 text-[#1fb85b]"
+      className={`h-[22px] w-[22px] shrink-0 ${className}`}
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -144,6 +151,21 @@ function InfoRow({
   );
 }
 
+function resolveSelectedCommand(
+  options: AgentDumpCommandOption[],
+  selectedId: AgentDumpCommandOptionId,
+  fallbackCommand: string,
+): AgentDumpCommandOption {
+  if (options.length === 0) {
+    return {
+      ...fallbackCommandOption,
+      command: fallbackCommand,
+    };
+  }
+
+  return options.find(({ id }) => id === selectedId) ?? options[0]!;
+}
+
 function getLookupFailureFromTab(tab: chrome.tabs.Tab | null): SessionLookupFailure | null {
   if (!tab?.id) {
     return buildFailure("NO_ACTIVE_TAB", "No active tab was found.");
@@ -173,6 +195,7 @@ export function App(): React.JSX.Element {
   const [viewState, setViewState] = useState<ViewState>({ kind: "loading" });
   const [isCopying, setIsCopying] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [selectedCommandId, setSelectedCommandId] = useState<AgentDumpCommandOptionId>("installed");
 
   useEffect(() => {
     let active = true;
@@ -224,6 +247,19 @@ export function App(): React.JSX.Element {
   };
 
   const readyResult = viewState.kind === "ready" ? viewState.result : null;
+  const selectedCommand =
+    readyResult?.ok === true
+      ? resolveSelectedCommand(readyResult.commandOptions, selectedCommandId, readyResult.command)
+      : null;
+
+  useEffect(() => {
+    if (!readyResult?.ok) {
+      return;
+    }
+
+    setSelectedCommandId(readyResult.commandOptions[0]?.id ?? "installed");
+    setIsCopied(false);
+  }, [readyResult]);
 
   return (
     <main className="popup-canvas min-h-screen px-3 py-3">
@@ -264,21 +300,50 @@ export function App(): React.JSX.Element {
                   Bash
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <TerminalPromptIcon />
-                  <code className="min-w-0 flex-1 break-all whitespace-pre-wrap pt-0.5 text-[16px] leading-[1.5] tracking-[0.02em] text-[var(--foreground)]">
-                    {readyResult.command}
-                  </code>
+                <div className="flex items-center gap-3 border-b border-[var(--divider)] pb-4">
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+                    {readyResult.commandOptions.map((option) => {
+                      const isActive = option.id === selectedCommand?.id;
+
+                      return (
+                        <button
+                          aria-pressed={isActive}
+                          className={`inline-flex h-9 items-center justify-center rounded-[12px] border px-3 text-[13px] font-medium tracking-[0.01em] transition-[background-color,border-color,color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ${
+                            isActive
+                              ? "border-[rgba(19,42,58,0.12)] bg-[var(--panel-surface)] text-[var(--foreground)] shadow-[0_8px_18px_rgba(79,90,107,0.08)]"
+                              : "border-transparent bg-transparent text-[var(--muted-foreground)] hover:border-[var(--panel-border)] hover:bg-[rgba(255,255,255,0.56)] hover:text-[var(--foreground)]"
+                          }`}
+                          key={option.id}
+                          onClick={() => {
+                            setSelectedCommandId(option.id);
+                            setIsCopied(false);
+                          }}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   <button
                     aria-label="Copy command"
-                    className="inline-flex h-[60px] w-[60px] shrink-0 cursor-pointer items-center justify-center rounded-[14px] border border-[var(--panel-border)] bg-[var(--panel-surface)] text-[var(--muted-foreground)] shadow-[0_8px_18px_rgba(79,90,107,0.08)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-[0_10px_20px_rgba(79,90,107,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={isCopying}
-                    onClick={() => void handleCopy(readyResult.command)}
+                    className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[14px] border border-[var(--panel-border)] bg-[var(--panel-surface)] text-[var(--muted-foreground)] shadow-[0_8px_18px_rgba(79,90,107,0.08)] transition-[background-color,border-color,color,box-shadow,transform] duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-[0_10px_20px_rgba(79,90,107,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isCopying || !selectedCommand}
+                    onClick={() => void handleCopy(selectedCommand?.command ?? readyResult.command)}
                     type="button"
                   >
                     {isCopied ? <CheckIcon /> : <CopyIcon />}
                   </button>
+                </div>
+
+                <div className="flex items-start gap-3 pt-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#25313d] text-[#ecf7f0] shadow-[0_8px_18px_rgba(37,49,61,0.14)]">
+                    <TerminalPromptIcon className="text-current" />
+                  </div>
+                  <code className="min-w-0 flex-1 break-all whitespace-pre-wrap pt-1 text-[16px] leading-[1.5] tracking-[0.02em] text-[var(--foreground)]">
+                    {selectedCommand?.command ?? readyResult.command}
+                  </code>
                 </div>
               </div>
 

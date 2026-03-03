@@ -1,4 +1,4 @@
-import { buildAgentDumpCommand } from "@/lib/command/agent-dump";
+import { buildAgentDumpCommand, buildAgentDumpCommandOptions } from "@/lib/command/agent-dump";
 import type {
   ConversationRecord,
   QueryErrorCode,
@@ -147,6 +147,7 @@ export async function readSessionIdFromPage(
       channelId,
       sessionId,
       command: buildAgentDumpCommand(sessionId),
+      commandOptions: buildAgentDumpCommandOptions(sessionId),
       title: record.title,
       updatedAt: record.updatedAt,
     };

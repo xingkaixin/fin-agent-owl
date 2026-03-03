@@ -8,10 +8,19 @@ FinAgent Owl 是一个内部使用的 Chrome 插件。
 - 在页面上下文读取 `FinAgentDB`
 - 在 `conversations` store 中找到对应会话
 - 提取 `sessionId`
-- 生成完整命令
+- 生成可复制命令，并支持多种 launcher 选择
 
 ```bash
-agent-dump claude://<sessionId> -output . -format json
+agent-dump claude://<sessionId> -output . -format json,markdown,raw
+```
+
+也支持在 popup 中切换并复制这些形式：
+
+```bash
+npx agent-dump claude://<sessionId> -output . -format json,markdown,raw
+bunx agent-dump claude://<sessionId> -output . -format json,markdown,raw
+uvx agent-dump claude://<sessionId> -output . -format json,markdown,raw
+pipx run agent-dump claude://<sessionId> -output . -format json,markdown,raw
 ```
 
 ## 技术栈
