@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-03-03
+
+### Added
+
+- Added launcher selector support for the generated `agent-dump` command, including installed binary, `npx`, `bunx`, `uvx`, and `pipx run`.
+
 ## [0.1.1] - 2026-03-02
 
 ### Added
