@@ -27,6 +27,7 @@ pipx run agent-dump claude://<sessionId> -output . -format json,markdown,raw
 
 - Bun
 - React
+- WXT
 - Vite
 - Tailwind CSS
 - shadcn/ui
@@ -45,7 +46,7 @@ bun run lint:fix
 bun run lint:format
 bun run checkall
 bun run icons
-bun run package
+bun run zip
 ```
 
 ## 图标生成
@@ -72,18 +73,25 @@ bun run icons
 执行：
 
 ```bash
-bun run package
+bun run zip
 ```
 
 会自动完成：
 
-1. 生成图标
-2. 构建插件
-3. 输出 zip 分发包
+1. 基于 WXT 构建插件到 `dist/chrome-mv3/`
+2. 使用 WXT 输出 zip 分发包
 
-默认输出路径：
+未压缩构建产物目录：
 
-- `release/fin-agent-owl-v{version}.zip`
+- `dist/chrome-mv3/`
+
+zip 分发包默认输出到：
+
+- `dist/fin-agent-owl-{version}-chrome.zip`
+
+zip 分发包由 `wxt zip` 生成，不再使用自定义 `package` 脚本或 `release/` 目录。
+
+如果修改了 `public/logo.svg`，先手动执行一次 `bun run icons` 再构建。
 
 ## 格式化与 Lint
 
@@ -99,9 +107,9 @@ bun run package
 ```text
 .
 ├─ public/
-├─ release/
 ├─ scripts/
 ├─ src/
+├─ wxt.config.ts
 ├─ .oxfmtrc.json
 ├─ .oxlintrc.json
 ├─ LICENSE
